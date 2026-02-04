@@ -72,8 +72,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def new_conversation_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Start a new conversation by clearing context."""
-    context.user_data.clear()
+    """Start a new conversation by clearing chat history."""
+    # Clear the chat history
+    if 'chat' in context.user_data:
+        del context.user_data['chat']
     await update.message.reply_text(
         "🔄 Conversation cleared! Let's start fresh.\n"
         "What would you like to talk about?"
@@ -87,12 +89,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     logger.info(f"User {user.username or user.id} sent: {user_message}")
     
+    # Basic input validation
+    if not user_message or len(user_message.strip()) == 0:
+        await update.message.reply_text("Please send a valid message.")
+        return
+    
+    # Limit message length to prevent excessive API usage
+    if len(user_message) > 4000:
+        await update.message.reply_text(
+            "Your message is too long. Please keep it under 4000 characters."
+        )
+        return
+    
     # Send typing action
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     
     try:
-        # Generate response using Gemini
-        response = model.generate_content(user_message)
+        # Initialize or get existing chat session for conversation history
+        if 'chat' not in context.user_data:
+            context.user_data['chat'] = model.start_chat(history=[])
+        
+        chat = context.user_data['chat']
+        
+        # Generate response using Gemini with conversation history
+        response = chat.send_message(user_message)
         
         # Check if response has text
         if response.text:
