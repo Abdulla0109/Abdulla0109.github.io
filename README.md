@@ -57,17 +57,32 @@ Before running this bot, you need:
 
 ### Method 2: Docker
 
-1. **Build the Docker image**
+1. **Build and run with Docker**
    ```bash
    docker build -t telegram-gemini-bot .
-   ```
-
-2. **Run the container**
-   ```bash
    docker run -d --name gemini-bot \
      -e TELEGRAM_BOT_TOKEN=your_telegram_bot_token \
      -e GEMINI_API_KEY=your_gemini_api_key \
      telegram-gemini-bot
+   ```
+
+### Method 3: Docker Compose
+
+1. **Create .env file**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your API keys
+
+2. **Run with Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **View logs**
+   ```bash
+   docker-compose logs -f
    ```
 
 ## Usage
